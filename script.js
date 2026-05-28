@@ -451,7 +451,7 @@ function getAnalyzerReportData() {
 
 async function downloadAnalyzerReport() {
   const report = getAnalyzerReportData();
-  sessionStorage.setItem("tenntaReportHtml", report.html);
+  localStorage.setItem("tenntaReportHtml", report.html);
   window.open("report.html", "_blank", "noopener,noreferrer");
   analyzerNote.textContent = "Relatorio aberto. Clique em Salvar como PDF na nova janela.";
 }
