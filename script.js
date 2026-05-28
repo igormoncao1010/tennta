@@ -240,7 +240,9 @@ function renderAnalyzerResult(analysis) {
       </div>
       <p>${escapeHtml(analysis.diagnostico || "Analise gerada.")}</p>
     </div>
-    <button class="report-download" type="button" id="downloadAnalyzerReport">Baixar relatorio profissional</button>
+    <div class="report-actions">
+      <button class="report-download" type="button" id="downloadAnalyzerReport">Baixar relatorio</button>
+    </div>
     <div class="analyzer-block">
       <h3>Resumo executivo</h3>
       <p>${escapeHtml(analysis.resumoExecutivo || analysis.diagnostico || "")}</p>
@@ -296,9 +298,6 @@ function renderAnalyzerResult(analysis) {
     </div>
   `;
 
-  document
-    .querySelector("#downloadAnalyzerReport")
-    ?.addEventListener("click", downloadAnalyzerReport);
 }
 
 function renderAnalyzerError(message) {
@@ -337,27 +336,41 @@ function buildReportHtml(payload, analysis) {
   <title>Diagnostico Instagram Tennta - ${escapeHtml(String(payload.handle || ""))}</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; color: #111827; background: #eef2f7; font-family: Arial, Helvetica, sans-serif; line-height: 1.55; }
-    .page { width: min(980px, calc(100% - 32px)); margin: 28px auto; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.14); }
-    header { padding: 34px 42px; color: #fff; background: linear-gradient(135deg, #05060a, #12343b); }
-    header img { width: 210px; max-height: 70px; object-fit: contain; filter: brightness(1.2); }
-    header h1 { margin: 28px 0 8px; font-size: 34px; line-height: 1.05; }
-    header p { margin: 0; color: #cbd5e1; }
-    section { padding: 28px 42px; border-top: 1px solid #e5e7eb; }
-    h2 { margin: 0 0 14px; font-size: 22px; color: #0f172a; }
-    h3 { margin: 0 0 8px; font-size: 17px; color: #111827; }
-    p, li { color: #475569; }
+    body { margin: 0; color: #111827; background: #dfe7f0; font-family: Arial, Helvetica, sans-serif; line-height: 1.55; }
+    .page { width: min(1120px, calc(100% - 32px)); margin: 28px auto; background: #fff; border-radius: 28px; overflow: hidden; box-shadow: 0 34px 110px rgba(15, 23, 42, 0.22); }
+    header { position: relative; min-height: 420px; padding: 44px 52px; color: #fff; overflow: hidden; background: radial-gradient(circle at 85% 10%, rgba(185,255,59,.35), transparent 24rem), radial-gradient(circle at 10% 20%, rgba(49,245,255,.28), transparent 25rem), linear-gradient(135deg, #05060a, #101827 58%, #0f3338); }
+    header:before { position: absolute; inset: 0; content: ""; opacity: .18; background-image: linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px); background-size: 54px 54px; }
+    header > * { position: relative; }
+    header img { width: 240px; max-height: 80px; object-fit: contain; filter: brightness(1.2); }
+    header h1 { max-width: 760px; margin: 70px 0 16px; font-size: 54px; line-height: .96; letter-spacing: -1px; }
+    header p { max-width: 720px; margin: 0; color: #cbd5e1; font-size: 18px; }
+    section { padding: 34px 52px; border-top: 1px solid #e5e7eb; }
+    h2 { margin: 0 0 16px; font-size: 25px; color: #0f172a; }
+    h3 { margin: 0 0 8px; font-size: 18px; color: #111827; }
+    p, li { color: #475569; font-size: 15px; }
     ul, ol { padding-left: 22px; }
-    .score { display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center; }
-    .score strong { display: block; color: #0891b2; font-size: 76px; line-height: 1; }
-    .badge { display: inline-block; margin-bottom: 8px; color: #365314; background: #d9f99d; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .score { display: grid; grid-template-columns: 190px 1fr; gap: 30px; align-items: center; background: linear-gradient(135deg, #f8fafc, #ecfeff); }
+    .score strong { display: block; color: #0891b2; font-size: 96px; line-height: .9; }
+    .badge { display: inline-block; margin-bottom: 8px; color: #365314; background: #d9f99d; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    .score-meter { height: 12px; overflow: hidden; border-radius: 999px; background: #dbeafe; }
+    .score-meter span { display: block; width: ${Math.min(Number(analysis.notaGeral || 0), 100)}%; height: 100%; background: linear-gradient(90deg, #06b6d4, #84cc16); }
     .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-    .report-card { padding: 16px; border: 1px solid #e5e7eb; border-radius: 14px; background: #f8fafc; }
+    .report-card { padding: 18px; border: 1px solid #e5e7eb; border-radius: 18px; background: linear-gradient(180deg, #fff, #f8fafc); box-shadow: 0 14px 34px rgba(15, 23, 42, .06); }
     .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .meta div { padding: 14px; background: #f8fafc; border-radius: 12px; }
+    .meta div { padding: 16px; background: #f8fafc; border-radius: 16px; border: 1px solid #e5e7eb; }
     .meta span { display: block; color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill-row span { display: inline-flex; padding: 8px 11px; border-radius: 999px; color: #164e63; background: #cffafe; font-size: 13px; font-weight: 700; }
+    .matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .panel { padding: 22px; border-radius: 22px; background: #0f172a; }
+    .panel h2, .panel h3 { color: #fff; }
+    .panel p, .panel li { color: #cbd5e1; }
+    .panel.light { color: #111827; background: #f8fafc; border: 1px solid #e5e7eb; }
+    .panel.light h2, .panel.light h3 { color: #111827; }
+    .panel.light p, .panel.light li { color: #475569; }
     footer { padding: 24px 42px; color: #64748b; background: #f8fafc; }
-    @media print { body { background: #fff; } .page { width: 100%; margin: 0; box-shadow: none; border-radius: 0; } }
+    @media (max-width: 760px) { header h1 { font-size: 36px; } .score, .grid, .meta, .matrix { grid-template-columns: 1fr; } }
+    @media print { body { background: #fff; } .page { width: 100%; margin: 0; box-shadow: none; border-radius: 0; } header { min-height: 330px; } }
   </style>
 </head>
 <body>
@@ -372,6 +385,7 @@ function buildReportHtml(payload, analysis) {
       <div>
         <h2>${escapeHtml(String(payload.handle || "Perfil analisado"))}</h2>
         <p>${escapeHtml(analysis.resumoExecutivo || analysis.diagnostico || "")}</p>
+        <div class="score-meter"><span></span></div>
       </div>
     </section>
     <section class="meta">
@@ -380,7 +394,10 @@ function buildReportHtml(payload, analysis) {
       <div><span>Frequencia</span>${escapeHtml(String(payload.postingFrequency || "Nao informado"))}</div>
     </section>
     <section><h2>Bio sugerida</h2><p>${escapeHtml(analysis.bioMelhorada || "")}</p></section>
-    <section><h2>Pontos fortes</h2>${reportList(analysis.pontosFortes)}</section>
+    <section class="matrix">
+      <div class="panel light"><h2>Pontos fortes</h2>${reportList(analysis.pontosFortes)}</div>
+      <div class="panel"><h2>Gargalos principais</h2>${reportList(analysis.gargalos)}</div>
+    </section>
     <section><h2>Fraquezas e correcoes</h2><div class="grid">${reportCards(weaknesses, "fraqueza", ["impacto", "correcao"])}</div></section>
     <section><h2>Tendencias atuais e oportunidades</h2><div class="grid">${reportCards(trends, "sinal", ["fonte", "aplicacao"])}</div>${reportList(analysis.oportunidadesContextuais)}</section>
     <section><h2>Ideias de conteudo</h2><div class="grid">${reportCards(ideas, "titulo", ["formato", "motivo"])}</div></section>
@@ -393,30 +410,168 @@ function buildReportHtml(payload, analysis) {
       )
       .join("")}</ol></section>
     <section><h2>Prioridades</h2>${reportList(analysis.prioridades)}</section>
+    <section><h2>Hashtags recomendadas</h2><div class="pill-row">${(analysis.hashtags || [])
+      .map((tag) => `<span>${escapeHtml(String(tag))}</span>`)
+      .join("")}</div></section>
     <footer>Tennta Marketing Digital | Relatorio consultivo gerado com IA e revisao estrategica automatizada.</footer>
   </main>
 </body>
 </html>`;
 }
 
-function downloadAnalyzerReport() {
+function createAnalyzerReportFile() {
   if (!latestAnalyzerReport) {
-    return;
+    throw new Error("Gere um diagnostico antes de baixar o relatorio.");
   }
 
   const html = buildReportHtml(latestAnalyzerReport.payload, latestAnalyzerReport.analysis);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
   const handle = String(latestAnalyzerReport.payload.handle || "perfil").replace(/[^a-z0-9_-]+/gi, "-");
 
-  link.href = url;
-  link.download = `diagnostico-tennta-${handle}.html`;
+  return {
+    filename: `diagnostico-tennta-${handle}.html`,
+    url,
+  };
+}
+
+function downloadAnalyzerReport() {
+  const report = createAnalyzerReportFile();
+  const link = document.createElement("a");
+
+  link.style.display = "none";
+  link.download = report.filename;
+  link.href = report.url;
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+
+  setTimeout(() => URL.revokeObjectURL(report.url), 15000);
+  analyzerNote.textContent = "Relatorio baixado.";
 }
+
+function ensureLeadModal() {
+  let modal = document.querySelector("#leadReportModal");
+
+  if (modal) {
+    return modal;
+  }
+
+  modal = document.createElement("div");
+  modal.id = "leadReportModal";
+  modal.className = "lead-modal";
+  modal.innerHTML = `
+    <div class="lead-modal__backdrop" data-close-lead-modal></div>
+    <form class="lead-modal__dialog" id="leadReportForm">
+      <button class="lead-modal__close" type="button" data-close-lead-modal aria-label="Fechar">x</button>
+      <p class="kicker">Relatorio Tennta</p>
+      <h3>Receba o diagnostico profissional</h3>
+      <p>Preencha seus dados para liberar o download. A Tennta tambem recebe uma copia para acompanhar sua analise.</p>
+      <label>
+        Nome
+        <input name="name" type="text" placeholder="Seu nome" required />
+      </label>
+      <label>
+        Email
+        <input name="email" type="email" placeholder="seuemail@empresa.com" required />
+      </label>
+      <label>
+        WhatsApp
+        <input name="whatsapp" type="tel" placeholder="(11) 99999-9999" required />
+      </label>
+      <button type="submit">Enviar e baixar relatorio</button>
+      <small id="leadReportNote" role="status"></small>
+    </form>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function openLeadModal() {
+  const modal = ensureLeadModal();
+  modal.classList.add("is-open");
+  modal.querySelector("input")?.focus();
+}
+
+function closeLeadModal() {
+  document.querySelector("#leadReportModal")?.classList.remove("is-open");
+}
+
+async function submitLeadAndDownload(form) {
+  if (!latestAnalyzerReport) {
+    throw new Error("Gere um diagnostico antes de baixar o relatorio.");
+  }
+
+  const note = form.querySelector("#leadReportNote");
+  const button = form.querySelector("button[type='submit']");
+  const originalText = button.textContent;
+  const formData = new FormData(form);
+  const lead = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    whatsapp: formData.get("whatsapp"),
+  };
+
+  button.disabled = true;
+  button.textContent = "Enviando...";
+  note.textContent = "Registrando seus dados com seguranca...";
+
+  try {
+    const response = await fetch("/api/report-lead", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        lead,
+        profile: latestAnalyzerReport.payload,
+        analysis: latestAnalyzerReport.analysis,
+      }),
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.errors?.join(" ") || data.detail || data.error || "Nao foi possivel enviar seus dados.");
+    }
+
+    note.textContent = "Dados enviados. Baixando relatorio...";
+    closeLeadModal();
+    downloadAnalyzerReport();
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+document.addEventListener("click", (event) => {
+  const downloadButton = event.target.closest("#downloadAnalyzerReport");
+  const closeLeadButton = event.target.closest("[data-close-lead-modal]");
+
+  try {
+    if (downloadButton) {
+      openLeadModal();
+    }
+
+    if (closeLeadButton) {
+      closeLeadModal();
+    }
+  } catch (error) {
+    analyzerNote.textContent = error instanceof Error ? error.message : "Nao foi possivel gerar o relatorio.";
+  }
+});
+
+document.addEventListener("submit", async (event) => {
+  if (!event.target.matches("#leadReportForm")) {
+    return;
+  }
+
+  event.preventDefault();
+
+  try {
+    await submitLeadAndDownload(event.target);
+  } catch (error) {
+    const note = event.target.querySelector("#leadReportNote");
+    note.textContent = error instanceof Error ? error.message : "Nao foi possivel liberar o relatorio.";
+  }
+});
 
 analyzerForm?.addEventListener("submit", async (event) => {
   event.preventDefault();

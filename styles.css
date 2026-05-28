@@ -666,19 +666,130 @@ h3 {
   opacity: 0.7;
 }
 
+.report-actions {
+  display: grid;
+}
+
 .report-download {
   min-height: 46px;
   width: 100%;
-  color: #061014;
-  background: linear-gradient(135deg, var(--lime), var(--cyan));
-  border: 0;
   border-radius: 999px;
   font-weight: 900;
   cursor: pointer;
+  color: #061014;
+  background: linear-gradient(135deg, var(--lime), var(--cyan));
+  border: 0;
 }
 
 .report-download:hover {
   filter: brightness(1.08);
+}
+
+.lead-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  place-items: center;
+  padding: 22px;
+}
+
+.lead-modal.is-open {
+  display: grid;
+}
+
+.lead-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(49, 245, 255, 0.22), transparent 24rem),
+    radial-gradient(circle at 82% 16%, rgba(255, 79, 216, 0.2), transparent 24rem),
+    rgba(5, 6, 10, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.lead-modal__dialog {
+  position: relative;
+  width: min(520px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.055)),
+    radial-gradient(circle at 10% 0%, rgba(49, 245, 255, 0.16), transparent 18rem);
+  box-shadow: 0 34px 120px rgba(0, 0, 0, 0.56);
+  backdrop-filter: blur(24px);
+}
+
+.lead-modal__dialog h3 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 0.96;
+}
+
+.lead-modal__dialog p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.lead-modal__dialog label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.lead-modal__dialog input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 15px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  outline: none;
+}
+
+.lead-modal__dialog input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(49, 245, 255, 0.12);
+}
+
+.lead-modal__dialog button[type="submit"] {
+  min-height: 52px;
+  color: #061014;
+  background: linear-gradient(135deg, var(--cyan), var(--lime));
+  border: 0;
+  border-radius: 999px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.lead-modal__dialog button[type="submit"]:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.lead-modal__dialog small {
+  min-height: 20px;
+  color: var(--lime);
+  font-weight: 800;
+}
+
+.lead-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 #analyzerNote {
