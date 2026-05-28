@@ -666,6 +666,21 @@ h3 {
   opacity: 0.7;
 }
 
+.report-download {
+  min-height: 46px;
+  width: 100%;
+  color: #061014;
+  background: linear-gradient(135deg, var(--lime), var(--cyan));
+  border: 0;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.report-download:hover {
+  filter: brightness(1.08);
+}
+
 #analyzerNote {
   grid-column: 1 / -1;
 }

@@ -20,6 +20,7 @@ let width = 0;
 let height = 0;
 let particles = [];
 let counterStarted = false;
+let latestAnalyzerReport = null;
 
 function resizeCanvas() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -195,6 +196,20 @@ function renderAnalyzerList(items = []) {
   return `<ul>${items.map((item) => `<li>${escapeHtml(String(item))}</li>`).join("")}</ul>`;
 }
 
+function renderReportRows(items = []) {
+  return items
+    .map(
+      (item) => `
+        <article class="analyzer-idea">
+          <strong>${escapeHtml(item.fraqueza || item.sinal || "Ponto de analise")}</strong>
+          <p>${escapeHtml(item.impacto || item.fonte || "")}</p>
+          <p>${escapeHtml(item.correcao || item.aplicacao || "")}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
 function getAnalyzerPayload(formData) {
   return {
     handle: formData.get("handle"),
@@ -214,6 +229,8 @@ function getAnalyzerPayload(formData) {
 function renderAnalyzerResult(analysis) {
   const ideas = Array.isArray(analysis.ideiasDeConteudo) ? analysis.ideiasDeConteudo : [];
   const calendar = Array.isArray(analysis.calendario7Dias) ? analysis.calendario7Dias : [];
+  const weaknesses = Array.isArray(analysis.fraquezasDetalhadas) ? analysis.fraquezasDetalhadas : [];
+  const trends = Array.isArray(analysis.tendenciasAtuais) ? analysis.tendenciasAtuais : [];
 
   analyzerResult.innerHTML = `
     <div class="analyzer-score">
@@ -223,6 +240,11 @@ function renderAnalyzerResult(analysis) {
       </div>
       <p>${escapeHtml(analysis.diagnostico || "Analise gerada.")}</p>
     </div>
+    <button class="report-download" type="button" id="downloadAnalyzerReport">Baixar relatorio profissional</button>
+    <div class="analyzer-block">
+      <h3>Resumo executivo</h3>
+      <p>${escapeHtml(analysis.resumoExecutivo || analysis.diagnostico || "")}</p>
+    </div>
     <div class="analyzer-block">
       <h3>Bio sugerida</h3>
       <p>${escapeHtml(analysis.bioMelhorada || "")}</p>
@@ -230,6 +252,15 @@ function renderAnalyzerResult(analysis) {
     <div class="analyzer-block">
       <h3>Gargalos</h3>
       ${renderAnalyzerList(analysis.gargalos)}
+    </div>
+    <div class="analyzer-block">
+      <h3>Fraquezas e correcoes</h3>
+      ${renderReportRows(weaknesses)}
+    </div>
+    <div class="analyzer-block">
+      <h3>Tendencias atuais e oportunidades</h3>
+      ${renderReportRows(trends)}
+      ${renderAnalyzerList(analysis.oportunidadesContextuais)}
     </div>
     <div class="analyzer-block">
       <h3>Ideias de conteudo</h3>
@@ -264,10 +295,127 @@ function renderAnalyzerResult(analysis) {
       ${renderAnalyzerList(analysis.prioridades)}
     </div>
   `;
+
+  document
+    .querySelector("#downloadAnalyzerReport")
+    ?.addEventListener("click", downloadAnalyzerReport);
 }
 
 function renderAnalyzerError(message) {
   analyzerResult.innerHTML = `<p class="analyzer-error">${escapeHtml(message)}</p>`;
+}
+
+function reportList(items = []) {
+  return `<ul>${items.map((item) => `<li>${escapeHtml(String(item))}</li>`).join("")}</ul>`;
+}
+
+function reportCards(items = [], titleKey, bodyKeys) {
+  return items
+    .map(
+      (item) => `
+        <article class="report-card">
+          <h3>${escapeHtml(item[titleKey] || "Item")}</h3>
+          ${bodyKeys.map((key) => `<p>${escapeHtml(item[key] || "")}</p>`).join("")}
+        </article>
+      `
+    )
+    .join("");
+}
+
+function buildReportHtml(payload, analysis) {
+  const generatedAt = new Date().toLocaleString("pt-BR");
+  const ideas = Array.isArray(analysis.ideiasDeConteudo) ? analysis.ideiasDeConteudo : [];
+  const calendar = Array.isArray(analysis.calendario7Dias) ? analysis.calendario7Dias : [];
+  const trends = Array.isArray(analysis.tendenciasAtuais) ? analysis.tendenciasAtuais : [];
+  const weaknesses = Array.isArray(analysis.fraquezasDetalhadas) ? analysis.fraquezasDetalhadas : [];
+  const logoUrl = `${window.location.origin}/logo.svg`;
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Diagnostico Instagram Tennta - ${escapeHtml(String(payload.handle || ""))}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #111827; background: #eef2f7; font-family: Arial, Helvetica, sans-serif; line-height: 1.55; }
+    .page { width: min(980px, calc(100% - 32px)); margin: 28px auto; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.14); }
+    header { padding: 34px 42px; color: #fff; background: linear-gradient(135deg, #05060a, #12343b); }
+    header img { width: 210px; max-height: 70px; object-fit: contain; filter: brightness(1.2); }
+    header h1 { margin: 28px 0 8px; font-size: 34px; line-height: 1.05; }
+    header p { margin: 0; color: #cbd5e1; }
+    section { padding: 28px 42px; border-top: 1px solid #e5e7eb; }
+    h2 { margin: 0 0 14px; font-size: 22px; color: #0f172a; }
+    h3 { margin: 0 0 8px; font-size: 17px; color: #111827; }
+    p, li { color: #475569; }
+    ul, ol { padding-left: 22px; }
+    .score { display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center; }
+    .score strong { display: block; color: #0891b2; font-size: 76px; line-height: 1; }
+    .badge { display: inline-block; margin-bottom: 8px; color: #365314; background: #d9f99d; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .report-card { padding: 16px; border: 1px solid #e5e7eb; border-radius: 14px; background: #f8fafc; }
+    .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .meta div { padding: 14px; background: #f8fafc; border-radius: 12px; }
+    .meta span { display: block; color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    footer { padding: 24px 42px; color: #64748b; background: #f8fafc; }
+    @media print { body { background: #fff; } .page { width: 100%; margin: 0; box-shadow: none; border-radius: 0; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <img src="${logoUrl}" alt="Tennta Marketing Digital" />
+      <h1>Diagnostico profissional de Instagram</h1>
+      <p>Relatorio gerado pela Tennta Marketing Digital em ${escapeHtml(generatedAt)}</p>
+    </header>
+    <section class="score">
+      <div><span class="badge">Score</span><strong>${escapeHtml(String(analysis.notaGeral ?? "--"))}</strong></div>
+      <div>
+        <h2>${escapeHtml(String(payload.handle || "Perfil analisado"))}</h2>
+        <p>${escapeHtml(analysis.resumoExecutivo || analysis.diagnostico || "")}</p>
+      </div>
+    </section>
+    <section class="meta">
+      <div><span>Nicho</span>${escapeHtml(String(payload.niche || "Nao informado"))}</div>
+      <div><span>Seguidores</span>${escapeHtml(String(payload.followers || "Nao informado"))}</div>
+      <div><span>Frequencia</span>${escapeHtml(String(payload.postingFrequency || "Nao informado"))}</div>
+    </section>
+    <section><h2>Bio sugerida</h2><p>${escapeHtml(analysis.bioMelhorada || "")}</p></section>
+    <section><h2>Pontos fortes</h2>${reportList(analysis.pontosFortes)}</section>
+    <section><h2>Fraquezas e correcoes</h2><div class="grid">${reportCards(weaknesses, "fraqueza", ["impacto", "correcao"])}</div></section>
+    <section><h2>Tendencias atuais e oportunidades</h2><div class="grid">${reportCards(trends, "sinal", ["fonte", "aplicacao"])}</div>${reportList(analysis.oportunidadesContextuais)}</section>
+    <section><h2>Ideias de conteudo</h2><div class="grid">${reportCards(ideas, "titulo", ["formato", "motivo"])}</div></section>
+    <section><h2>Plano de 7 dias</h2><ol>${calendar
+      .map(
+        (item) =>
+          `<li><strong>${escapeHtml(item.dia || "")}:</strong> ${escapeHtml(item.acao || "")} (${escapeHtml(
+            item.objetivo || ""
+          )})</li>`
+      )
+      .join("")}</ol></section>
+    <section><h2>Prioridades</h2>${reportList(analysis.prioridades)}</section>
+    <footer>Tennta Marketing Digital | Relatorio consultivo gerado com IA e revisao estrategica automatizada.</footer>
+  </main>
+</body>
+</html>`;
+}
+
+function downloadAnalyzerReport() {
+  if (!latestAnalyzerReport) {
+    return;
+  }
+
+  const html = buildReportHtml(latestAnalyzerReport.payload, latestAnalyzerReport.analysis);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const handle = String(latestAnalyzerReport.payload.handle || "perfil").replace(/[^a-z0-9_-]+/gi, "-");
+
+  link.href = url;
+  link.download = `diagnostico-tennta-${handle}.html`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 analyzerForm?.addEventListener("submit", async (event) => {
@@ -280,10 +428,11 @@ analyzerForm?.addEventListener("submit", async (event) => {
   analyzerNote.textContent = "Gerando diagnostico com IA...";
 
   try {
+    const payload = getAnalyzerPayload(new FormData(analyzerForm));
     const response = await fetch("/api/instagram-analysis", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(getAnalyzerPayload(new FormData(analyzerForm))),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
@@ -295,6 +444,7 @@ analyzerForm?.addEventListener("submit", async (event) => {
       return;
     }
 
+    latestAnalyzerReport = { payload, analysis: data.analysis };
     renderAnalyzerResult(data.analysis);
     analyzerNote.textContent = "Diagnostico gerado.";
   } catch (error) {
