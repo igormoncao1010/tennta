@@ -435,7 +435,16 @@ analyzerForm?.addEventListener("submit", async (event) => {
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        "A rota /api/instagram-analysis nao respondeu como JSON. Confira se o arquivo api/instagram-analysis.js existe no GitHub e se o deploy da Vercel terminou sem erro."
+      );
+    }
 
     if (!response.ok || !data.ok) {
       const message = data.errors?.join(" ") || data.detail || data.error || "Erro inesperado.";
