@@ -370,10 +370,26 @@ function buildReportHtml(payload, analysis) {
     .panel.light p, .panel.light li { color: #475569; }
     footer { padding: 24px 42px; color: #64748b; background: #f8fafc; }
     @media (max-width: 760px) { header h1 { font-size: 36px; } .score, .grid, .meta, .matrix { grid-template-columns: 1fr; } }
-    @media print { body { background: #fff; } .page { width: 100%; margin: 0; box-shadow: none; border-radius: 0; } header { min-height: 330px; } }
+    .print-actions { position: sticky; top: 0; z-index: 20; display: flex; justify-content: center; gap: 10px; padding: 14px; background: rgba(15, 23, 42, .92); backdrop-filter: blur(12px); }
+    .print-actions button { min-height: 42px; padding: 0 18px; border-radius: 999px; border: 0; font-weight: 800; cursor: pointer; }
+    .print-actions button:first-child { color: #061014; background: linear-gradient(135deg, #31f5ff, #b9ff3b); }
+    .print-actions button:last-child { color: #fff; background: rgba(255,255,255,.14); }
+    @page { size: A4; margin: 10mm; }
+    @media print {
+      body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .print-actions { display: none; }
+      .page { width: 100%; margin: 0; box-shadow: none; border-radius: 0; }
+      header { min-height: 330px; }
+      section { break-inside: avoid; page-break-inside: avoid; }
+      .report-card, .panel, .meta div { break-inside: avoid; page-break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
+  <div class="print-actions">
+    <button onclick="window.print()">Salvar como PDF</button>
+    <button onclick="window.close()">Fechar</button>
+  </div>
   <main class="page">
     <header>
       <img src="${logoUrl}" alt="Tennta Marketing Digital" />
@@ -428,65 +444,24 @@ function getAnalyzerReportData() {
   const handle = String(latestAnalyzerReport.payload.handle || "perfil").replace(/[^a-z0-9_-]+/gi, "-");
 
   return {
-    filename: `diagnostico-tennta-${handle}.pdf`,
+    filename: `diagnostico-tennta-${handle}.html`,
     html,
   };
 }
 
 async function downloadAnalyzerReport() {
   const report = getAnalyzerReportData();
+  const reportWindow = window.open("", "_blank", "noopener,noreferrer");
 
-  if (!window.html2pdf) {
-    throw new Error("O gerador de PDF ainda nao carregou. Atualize a pagina e tente novamente.");
+  if (!reportWindow) {
+    throw new Error("O navegador bloqueou a janela do relatorio. Permita pop-ups e tente novamente.");
   }
 
-  const frame = document.createElement("iframe");
-  frame.className = "pdf-render-frame";
-  frame.setAttribute("aria-hidden", "true");
-  document.body.appendChild(frame);
-
-  const frameDoc = frame.contentDocument || frame.contentWindow.document;
-  frameDoc.open();
-  frameDoc.write(report.html);
-  frameDoc.close();
-
-  await new Promise((resolve) => {
-    frame.onload = resolve;
-    setTimeout(resolve, 1200);
-  });
-
-  const reportElement = frameDoc.querySelector(".page");
-
-  if (!reportElement) {
-    frame.remove();
-    throw new Error("Nao foi possivel montar o relatorio em PDF.");
-  }
-
-  await window.html2pdf()
-    .set({
-      margin: [0.18, 0.18, 0.18, 0.18],
-      filename: report.filename,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#dfe7f0",
-      },
-      jsPDF: {
-        unit: "in",
-        format: "a4",
-        orientation: "portrait",
-      },
-      pagebreak: {
-        mode: ["css", "legacy"],
-        avoid: [".report-card", ".panel", ".meta div"],
-      },
-    })
-    .from(reportElement)
-    .save();
-
-  frame.remove();
-  analyzerNote.textContent = "Relatorio em PDF baixado.";
+  reportWindow.document.open();
+  reportWindow.document.write(report.html);
+  reportWindow.document.close();
+  reportWindow.focus();
+  analyzerNote.textContent = "Relatorio aberto. Clique em Salvar como PDF na nova janela.";
 }
 
 function ensureLeadModal() {
