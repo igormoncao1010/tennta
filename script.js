@@ -451,16 +451,8 @@ function getAnalyzerReportData() {
 
 async function downloadAnalyzerReport() {
   const report = getAnalyzerReportData();
-  const reportWindow = window.open("", "_blank", "noopener,noreferrer");
-
-  if (!reportWindow) {
-    throw new Error("O navegador bloqueou a janela do relatorio. Permita pop-ups e tente novamente.");
-  }
-
-  reportWindow.document.open();
-  reportWindow.document.write(report.html);
-  reportWindow.document.close();
-  reportWindow.focus();
+  sessionStorage.setItem("tenntaReportHtml", report.html);
+  window.open("report.html", "_blank", "noopener,noreferrer");
   analyzerNote.textContent = "Relatorio aberto. Clique em Salvar como PDF na nova janela.";
 }
 

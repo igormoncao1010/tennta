@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Relatorio Tennta</title>
+  </head>
+  <body>
+    <script>
+      const reportHtml = sessionStorage.getItem("tenntaReportHtml");
+
+      if (reportHtml) {
+        document.open();
+        document.write(reportHtml);
+        document.close();
+      } else {
+        document.body.innerHTML =
+          '<main style="max-width:720px;margin:48px auto;font-family:Arial,sans-serif;line-height:1.5"><h1>Relatorio indisponivel</h1><p>Volte ao site, gere o diagnostico novamente e clique em Baixar relatorio.</p></main>';
+      }
+    </script>
+  </body>
+</html>
